@@ -11,9 +11,6 @@ O **Template Api Monolith** foi desenvolvido utilizando **NestJS** e possui um s
 - **Pino** - Biblioteca para logging
 - **Swagger** - Documentação interativa da API
 
-## 🚀 Documentação técnica
-👉 [Documentação Técnica](https://hugopsfinance.atlassian.net/wiki/spaces/adv/pages/28966914/Especifica+o+T+cnica)
-
 ## 📜 Documentação da API
 
 A API possui uma documentação interativa configurada no Swagger, acessível através da seguinte rota:
