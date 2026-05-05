@@ -1,0 +1,69 @@
+name: Deploy (Dispatcher)
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Plataforma de deploy (eks|ecs|lambda)'
+        required: true
+        type: choice
+        options: [eks, ecs, lambda]
+      environment:
+        description: 'Ambiente (stg/prod)'
+        required: false
+        default: 'stg'
+        type: choice
+        options: [stg, prod]
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+-production']
+
+permissions:
+  id-token: write # necessário para OIDC
+  contents: read
+
+env:
+  PLATFORM: ${{ github.event.inputs.platform || vars.PLATFORM}}
+  APPLICATION_NAME: ${{ github.event.inputs.application_name || vars.APPLICATION_NAME || github.event.repository.name}}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.inputs.environment || 'prod' }}-${{ github.event.inputs.platform || vars.PLATFORM || 'unset' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy → ${{ github.event.inputs.platform || vars.PLATFORM || 'unset' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'stg' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciais AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION_PROD }}
+
+      # ================= EKS =================
+      - name: Deploy EKS (composite action)
+        if: ${{ env.PLATFORM == 'eks' }}
+        uses: hugops/pipeline-templates/.github/actions/eks-deploy@v2
+        #env:
+        # comuns + EKS específicos já estão no env do job
+        # (são herdados pela composite action)
+        # nada extra aqui
+
+      # ================= ECS =================
+      - name: Deploy ECS (composite action)
+        if: ${{ env.PLATFORM == 'ecs' }}
+        uses: hugops/pipeline-templates/.github/actions/ecs-deploy@v2
+        with:
+          ecr-repository: ${{ env.APPLICATION_NAME }}
+          aws-region: ${{ secrets.AWS_REGION_PROD }}
+          cluster-name: ${{ secrets.AWS_CLUSTER_PROD }}
+          service-name: ${{ env.APPLICATION_NAME }}
+
+      # =============== LAMBDA ===============
+      #- name: Deploy Lambda (composite action)
+      #  if: ${{ env.PLATFORM == 'lambda' }}
+      #  uses: hugops/pipeline-templates/.github/actions/lambda-deploy@v1

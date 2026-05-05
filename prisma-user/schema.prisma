@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                Int              @id @default(autoincrement())
+  onboardingId      Int
+  name              String           @db.VarChar(150)
+  document          String           @db.VarChar(20)
+  email             String           @db.VarChar(100)
+  createdAt         DateTime         @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt         DateTime?        @default(now()) @db.Timestamp(6) @map("updated_at")
+
+  @@map("users")
+}

@@ -1,0 +1,30 @@
+# --- Definição do Deployment ---
+# O Deployment gerencia os Pods sua aplicação, garantindo que o número
+# desejado de réplicas esteja sempre rodando e orquestrando as atualizações.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Nome do seu deployment
+  name: template-api-deployment
+  labels:
+    app: template-api
+spec:
+  # Quantidade de réplicas (Pods) que você deseja rodar
+  replicas: 2
+  selector:
+    matchLabels:
+      app: template-api
+  template:
+    metadata:
+      labels:
+        # A label do Pod, usada pelo Service para encontrar quais Pods gerenciar
+        app: template-api
+    spec:
+      containers:
+      - name: template-api-container
+        # IMPORTANTE: Este é o placeholder que o nosso pipeline irá substituir
+        # dinamicamente com a imagem correta do ECR. Não altere este valor.
+        image: IMAGE_PLACEHOLDER
+        ports:
+        # A porta que sua aplicação Node.js expõe dentro do contêiner
+        - containerPort: 3777
